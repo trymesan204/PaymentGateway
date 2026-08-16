@@ -1,0 +1,17 @@
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\obj\Debug\net8.0\PaymentService.Infrastructure.csproj.AssemblyReference.cache
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\obj\Debug\net8.0\PaymentService.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\obj\Debug\net8.0\PaymentService.Infrastructure.AssemblyInfoInputs.cache
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\obj\Debug\net8.0\PaymentService.Infrastructure.AssemblyInfo.cs
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\obj\Debug\net8.0\PaymentService.Infrastructure.csproj.CoreCompileInputs.cache
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\bin\Debug\net8.0\PaymentService.Infrastructure.deps.json
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\bin\Debug\net8.0\PaymentService.Infrastructure.runtimeconfig.json
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\bin\Debug\net8.0\PaymentService.Infrastructure.dll
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\bin\Debug\net8.0\PaymentService.Infrastructure.pdb
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\bin\Debug\net8.0\PaymentService.Domain.dll
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\bin\Debug\net8.0\PaymentService.Domain.pdb
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\obj\Debug\net8.0\PaymentS.C975F968.Up2Date
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\obj\Debug\net8.0\PaymentService.Infrastructure.dll
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\obj\Debug\net8.0\refint\PaymentService.Infrastructure.dll
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\obj\Debug\net8.0\PaymentService.Infrastructure.pdb
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\obj\Debug\net8.0\PaymentService.Infrastructure.genruntimeconfig.cache
+D:\projects\PaymentGateway\PaymentService\PaymentService.Infrastructure\obj\Debug\net8.0\ref\PaymentService.Infrastructure.dll

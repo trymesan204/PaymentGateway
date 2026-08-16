@@ -1,0 +1,13 @@
+@PaymentService_HostAddress = http://localhost:5150
+
+### Process a payment
+POST {{PaymentService_HostAddress}}/api/payments
+Content-Type: application/json
+
+{
+  "amount": 100.50,
+  "currency": "USD"
+}
+
+### Get payment by id
+GET {{PaymentService_HostAddress}}/api/payments/{{paymentId}}
