@@ -36,7 +36,7 @@ public class PaymentServiceImpl : IPaymentService
         var status = await _paymentProcessor.ProcessPaymentAsync(payment.Amount, payment.Currency, cancellationToken);
 
         payment.Status = status;
-        payment.ProcessedAt = DateTime.UtcNow;
+        payment.UpdatedAt = DateTime.UtcNow;
 
         await _paymentRepository.UpdateAsync(payment, cancellationToken);
 
@@ -56,6 +56,6 @@ public class PaymentServiceImpl : IPaymentService
         Currency = payment.Currency,
         Status = payment.Status,
         CreatedAt = payment.CreatedAt,
-        ProcessedAt = payment.ProcessedAt
+        ProcessedAt = payment.UpdatedAt
     };
 }

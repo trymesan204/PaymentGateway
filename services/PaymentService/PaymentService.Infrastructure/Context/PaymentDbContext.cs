@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PaymentService.Domain.Entities;
-using PaymentService.Infrastructure.Data.Configurations;
+using PaymentService.Infrastructure.Context.Configurations;
 
-namespace PaymentService.Infrastructure.Data;
+namespace PaymentService.Infrastructure.Context;
 
 public class PaymentDbContext : DbContext
 {
@@ -15,6 +15,8 @@ public class PaymentDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Payment>().Property(p => p.Status).HasConversion<string>();
+
         modelBuilder.ApplyConfiguration(new PaymentConfiguration());
         base.OnModelCreating(modelBuilder);
     }

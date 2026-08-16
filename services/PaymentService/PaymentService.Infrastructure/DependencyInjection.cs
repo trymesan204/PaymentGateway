@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PaymentService.Domain.Interfaces;
-using PaymentService.Infrastructure.Data;
+using PaymentService.Infrastructure.Context;
 using PaymentService.Infrastructure.Repositories;
 using PaymentService.Infrastructure.Services;
 

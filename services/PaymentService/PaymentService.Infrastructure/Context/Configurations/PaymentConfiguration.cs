@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PaymentService.Domain.Entities;
 
-namespace PaymentService.Infrastructure.Data.Configurations;
+namespace PaymentService.Infrastructure.Context.Configurations;
 
 public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
 {
@@ -11,6 +11,9 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.ToTable("payments");
 
         builder.HasKey(p => p.Id);
+
+        builder.HasIndex(p => p.IdempotencyKey)
+            .IsUnique();
 
         builder.Property(p => p.Amount)
             .HasPrecision(18, 2)
@@ -24,8 +27,11 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             .IsRequired();
 
         builder.Property(p => p.CreatedAt)
+            .HasDefaultValue(DateTime.UtcNow)
             .IsRequired();
 
-        builder.Property(p => p.ProcessedAt);
+        builder.Property(p => p.UpdatedAt)
+            .HasDefaultValue(DateTime.UtcNow)
+            .IsRequired();
     }
 }
