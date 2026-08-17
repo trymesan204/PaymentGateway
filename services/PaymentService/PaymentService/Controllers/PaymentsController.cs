@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using PaymentService.Abstractions;
 using PaymentService.Models;
 using PaymentService.Services;
 
 namespace PaymentService.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/payments")]
 public class PaymentsController : ControllerBase
 {
     private readonly IPaymentService _paymentService;
@@ -23,7 +24,12 @@ public class PaymentsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var response = await _paymentService.ProcessPaymentAsync(request, cancellationToken);
-        return Ok(response);
+
+        if (response.IsNew)
+        {
+            return CreatedAtAction(nameof(GetPayment), new { id = response.PaymentResponse.Id }, response.PaymentResponse);
+        }
+        return Ok(response.PaymentResponse);
     }
 
     [HttpGet("{id:guid}")]

@@ -28,6 +28,13 @@ public class PaymentRepository : IPaymentRepository
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
 
+    public async Task<Payment?> GetByIdempotencyKeyAsync(Guid idempotencyKey, CancellationToken cancellationToken = default)
+    {
+        return await _context.Payments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == idempotencyKey, cancellationToken);
+    }
+
     public async Task UpdateAsync(Payment payment, CancellationToken cancellationToken = default)
     {
         _context.Payments.Update(payment);

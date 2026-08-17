@@ -1,33 +1,35 @@
+using PaymentService.Abstractions;
 using PaymentService.Domain.Entities;
 using PaymentService.Domain.Interfaces;
 using PaymentService.Models;
 
 namespace PaymentService.Services;
 
-public interface IPaymentService
-{
-    Task<PaymentResponse> ProcessPaymentAsync(CreatePaymentRequest request, CancellationToken cancellationToken = default);
-    Task<PaymentResponse?> GetPaymentAsync(Guid id, CancellationToken cancellationToken = default);
-}
-
-public class PaymentServiceImpl : IPaymentService
+public class PaymentsService : IPaymentService
 {
     private readonly IPaymentRepository _paymentRepository;
     private readonly IPaymentProcessor _paymentProcessor;
 
-    public PaymentServiceImpl(IPaymentRepository paymentRepository, IPaymentProcessor paymentProcessor)
+    public PaymentsService(IPaymentRepository paymentRepository, IPaymentProcessor paymentProcessor)
     {
         _paymentRepository = paymentRepository;
         _paymentProcessor = paymentProcessor;
     }
 
-    public async Task<PaymentResponse> ProcessPaymentAsync(CreatePaymentRequest request, CancellationToken cancellationToken = default)
+    public async Task<PaymentResult> ProcessPaymentAsync(CreatePaymentRequest request, CancellationToken cancellationToken = default)
     {
+        var existingPayment = await _paymentRepository.GetByIdempotencyKeyAsync(request.IdempotencyKey, cancellationToken);
+
+        if (existingPayment != null) return new PaymentResult() { PaymentResponse = MapToResponse(existingPayment), IsNew = false};
+            
         var payment = new Payment
         {
             Id = Guid.NewGuid(),
+            UserId = request.UserId,
+            IdempotencyKey = request.IdempotencyKey,
             Amount = request.Amount,
             Currency = request.Currency.ToUpperInvariant(),
+            PaymentMethod = request.PaymentMethod,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -40,7 +42,7 @@ public class PaymentServiceImpl : IPaymentService
 
         await _paymentRepository.UpdateAsync(payment, cancellationToken);
 
-        return MapToResponse(payment);
+        return new PaymentResult() { PaymentResponse = MapToResponse(payment), IsNew = true };
     }
 
     public async Task<PaymentResponse?> GetPaymentAsync(Guid id, CancellationToken cancellationToken = default)
@@ -56,6 +58,6 @@ public class PaymentServiceImpl : IPaymentService
         Currency = payment.Currency,
         Status = payment.Status,
         CreatedAt = payment.CreatedAt,
-        ProcessedAt = payment.UpdatedAt
+        UpdatedAt = payment.UpdatedAt
     };
 }

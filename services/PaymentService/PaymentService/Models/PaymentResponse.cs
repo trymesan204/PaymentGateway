@@ -9,5 +9,5 @@ public class PaymentResponse
     public string Currency { get; set; } = string.Empty;
     public PaymentStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
-    public DateTime? ProcessedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }
