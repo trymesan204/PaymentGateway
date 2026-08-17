@@ -1,14 +1,21 @@
+using PaymentService.Abstractions;
 using PaymentService.Infrastructure;
 using PaymentService.Services;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddScoped<IPaymentService, PaymentServiceImpl>();
+builder.Services.AddScoped<IPaymentService, PaymentsService>();
 
 var app = builder.Build();
 

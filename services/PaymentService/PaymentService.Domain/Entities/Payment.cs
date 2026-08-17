@@ -5,6 +5,7 @@ namespace PaymentService.Domain.Entities;
 public class Payment
 {
     public Guid Id { get; set; }
+    public Guid UserId { get; set; }
     public Guid IdempotencyKey { get; set; }      // client-supplied, prevents double charging
     public decimal Amount { get; set; }
     public string Currency { get; set; }           // "NPR", "USD" etc.
