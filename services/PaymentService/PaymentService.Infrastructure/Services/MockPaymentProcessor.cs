@@ -5,18 +5,16 @@ namespace PaymentService.Infrastructure.Services;
 
 public class MockPaymentProcessor : IPaymentProcessor
 {
-    public Task<PaymentStatus> ProcessPaymentAsync(decimal amount, string currency, CancellationToken cancellationToken = default)
+    public async Task<PaymentStatus> ProcessPaymentAsync(decimal amount, string currency, CancellationToken cancellationToken = default)
     {
-        int[] failed = [5, 10, 15];
-        int timeout = 0;
-        var randomStatus = Random.Shared.Next(20);
-        var status = randomStatus == timeout 
-        ? PaymentStatus.Timeout 
-        : (failed.Contains(randomStatus)
-            ? PaymentStatus.Failed
-            : PaymentStatus.Succeeded
-        );
+        await Task.Delay(Random.Shared.Next(50, 300), cancellationToken);
 
-        return Task.FromResult(status);
+        var roll = Random.Shared.Next(100);
+        return roll switch
+        {
+            < 5 => throw new TimeoutException("Provider did not respond in time"),
+            < 20 => PaymentStatus.Failed,
+            _ => PaymentStatus.Succeeded
+        };
     }
 }
