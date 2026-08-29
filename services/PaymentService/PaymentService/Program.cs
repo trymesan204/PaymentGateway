@@ -1,32 +1,59 @@
 using PaymentService.Abstractions;
 using PaymentService.Infrastructure;
 using PaymentService.Services;
+using Serilog;
 using System.Text.Json.Serialization;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+try
+{
+    Log.Information("Starting PaymentService");
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+    var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddScoped<IPaymentService, PaymentsService>();
+    builder.Host.UseSerilog((context, services, configuration) =>
+        configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext());
 
-var app = builder.Build();
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
 
-//if (app.Environment.IsDevelopment())
-//{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-//}
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
 
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
+    builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddScoped<IPaymentService, PaymentsService>();
 
-app.Run();
+    var app = builder.Build();
+
+    app.UseSerilogRequestLogging();
+
+    //if (app.Environment.IsDevelopment())
+    //{
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    //}
+
+    app.UseHttpsRedirection();
+    app.UseAuthorization();
+    app.MapControllers();
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "PaymentService terminated unexpectedly");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
+}
