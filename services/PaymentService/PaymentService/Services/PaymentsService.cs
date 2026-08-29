@@ -1,5 +1,6 @@
 using PaymentService.Abstractions;
 using PaymentService.Domain.Entities;
+using PaymentService.Domain.Enums;
 using PaymentService.Domain.Interfaces;
 using PaymentService.Models;
 
@@ -35,9 +36,17 @@ public class PaymentsService : IPaymentService
 
         await _paymentRepository.AddAsync(payment, cancellationToken);
 
-        var status = await _paymentProcessor.ProcessPaymentAsync(payment.Amount, payment.Currency, cancellationToken);
+        PaymentStatus status;
+        try
+        {
+            status = await _paymentProcessor.ProcessPaymentAsync(payment.Amount, payment.Currency, cancellationToken);
+            payment.Status = status;
+        }
+        catch (TimeoutException e)
+        {
+            payment.Status = PaymentStatus.Pending;
+        }
 
-        payment.Status = status;
         payment.UpdatedAt = DateTime.UtcNow;
 
         await _paymentRepository.UpdateAsync(payment, cancellationToken);
