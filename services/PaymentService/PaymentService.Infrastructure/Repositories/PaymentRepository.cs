@@ -32,7 +32,7 @@ public class PaymentRepository : IPaymentRepository
     {
         return await _context.Payments
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == idempotencyKey, cancellationToken);
+            .FirstOrDefaultAsync(p => p.IdempotencyKey == idempotencyKey, cancellationToken);
     }
 
     public async Task UpdateAsync(Payment payment, CancellationToken cancellationToken = default)
