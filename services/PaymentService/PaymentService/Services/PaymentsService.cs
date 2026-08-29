@@ -10,19 +10,31 @@ public class PaymentsService : IPaymentService
 {
     private readonly IPaymentRepository _paymentRepository;
     private readonly IPaymentProcessor _paymentProcessor;
+    private readonly ILogger<PaymentsService> _logger;
 
-    public PaymentsService(IPaymentRepository paymentRepository, IPaymentProcessor paymentProcessor)
+    public PaymentsService(
+        IPaymentRepository paymentRepository,
+        IPaymentProcessor paymentProcessor,
+        ILogger<PaymentsService> logger)
     {
         _paymentRepository = paymentRepository;
         _paymentProcessor = paymentProcessor;
+        _logger = logger;
     }
 
     public async Task<PaymentResult> ProcessPaymentAsync(CreatePaymentRequest request, CancellationToken cancellationToken = default)
     {
         var existingPayment = await _paymentRepository.GetByIdempotencyKeyAsync(request.IdempotencyKey, cancellationToken);
 
-        if (existingPayment != null) return new PaymentResult() { PaymentResponse = MapToResponse(existingPayment), IsNew = false};
-            
+        if (existingPayment != null)
+        {
+            _logger.LogInformation(
+                "Duplicate payment request for idempotency key {IdempotencyKey}; returning existing payment {PaymentId}",
+                request.IdempotencyKey,
+                existingPayment.Id);
+            return new PaymentResult() { PaymentResponse = MapToResponse(existingPayment), IsNew = false };
+        }
+
         var payment = new Payment
         {
             Id = Guid.NewGuid(),
@@ -42,14 +54,25 @@ public class PaymentsService : IPaymentService
             status = await _paymentProcessor.ProcessPaymentAsync(payment.Amount, payment.Currency, cancellationToken);
             payment.Status = status;
         }
-        catch (TimeoutException e)
+        catch (TimeoutException ex)
         {
             payment.Status = PaymentStatus.Pending;
+            _logger.LogWarning(
+                ex,
+                "Payment processor timed out for payment {PaymentId}; status set to {Status}",
+                payment.Id,
+                payment.Status);
         }
 
         payment.UpdatedAt = DateTime.UtcNow;
 
         await _paymentRepository.UpdateAsync(payment, cancellationToken);
+
+        _logger.LogInformation(
+            "Processed payment {PaymentId} with status {Status} for user {UserId}",
+            payment.Id,
+            payment.Status,
+            payment.UserId);
 
         return new PaymentResult() { PaymentResponse = MapToResponse(payment), IsNew = true };
     }

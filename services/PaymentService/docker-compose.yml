@@ -29,10 +29,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Host=host.docker.internal;Port=5432;Database=paymentservice;Username=postgres;Password=postgres"
+    volumes:
+      - ./logs:/app/logs
     depends_on:
       payment-db:
         condition: service_healthy
- 
+
 volumes:
   payment-db-data:
  
