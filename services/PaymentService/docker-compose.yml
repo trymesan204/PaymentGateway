@@ -1,0 +1,38 @@
+services:
+ 
+  #── The database box ─────────────────────────────────────────
+  payment-db:
+    image: postgres:16
+    container_name: payment-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: paymentservice
+    ports:
+      - "5432:5432"
+    volumes:
+      - payment-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+ 
+  # ── Your app box ──────────────────────────────────────────────
+  payment-service:
+    build:
+      context: .                                    # adjust if this file isn't next to the .sln
+      dockerfile: ./PaymentService/Dockerfile      # adjust path to match your actual Dockerfile location
+    container_name: payment-service
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=host.docker.internal;Port=5432;Database=paymentservice;Username=postgres;Password=postgres"
+    depends_on:
+      payment-db:
+        condition: service_healthy
+ 
+volumes:
+  payment-db-data:
+ 
