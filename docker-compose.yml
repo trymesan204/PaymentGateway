@@ -14,3 +14,44 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  #── The database box ─────────────────────────────────────────
+  payment-db:
+    image: postgres:16
+    container_name: payment-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: paymentservice
+    ports:
+      - "5433:5432"
+    volumes:
+      - payment-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── Your app box ──────────────────────────────────────────────
+  payment-service:
+    build:
+      context: .                                              # repo root, so shared/PaymentGateway.Contracts is in scope
+      dockerfile: services/PaymentService/PaymentService/Dockerfile
+    container_name: payment-service
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=payment-db;Port=5432;Database=paymentservice;Username=postgres;Password=postgres"
+      RabbitMQ__Host: rabbitmq
+    volumes:
+      - ./services/PaymentService/logs:/app/logs
+    depends_on:
+      payment-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  payment-db-data:

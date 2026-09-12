@@ -1,23 +1,31 @@
+using PaymentGateway.Contracts;
 using PaymentService.Abstractions;
 using PaymentService.Domain.Entities;
 using PaymentService.Domain.Enums;
 using PaymentService.Domain.Interfaces;
 using PaymentService.Models;
+using System.Text.Json;
 
 namespace PaymentService.Services;
 
 public class PaymentsService : IPaymentService
 {
     private readonly IPaymentRepository _paymentRepository;
+    private readonly IOutboxRepository _outboxRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IPaymentProcessor _paymentProcessor;
     private readonly ILogger<PaymentsService> _logger;
 
     public PaymentsService(
         IPaymentRepository paymentRepository,
+        IOutboxRepository outboxRepository,
+        IUnitOfWork unitOfWork,
         IPaymentProcessor paymentProcessor,
         ILogger<PaymentsService> logger)
     {
         _paymentRepository = paymentRepository;
+        _outboxRepository = outboxRepository;
+        _unitOfWork = unitOfWork;
         _paymentProcessor = paymentProcessor;
         _logger = logger;
     }
@@ -38,8 +46,10 @@ public class PaymentsService : IPaymentService
         var payment = new Payment
         {
             Id = Guid.NewGuid(),
-            UserId = request.UserId,
             IdempotencyKey = request.IdempotencyKey,
+            Type = request.Type,
+            PayerId = request.PayerId,
+            PayeeId = request.PayeeId,
             Amount = request.Amount,
             Currency = request.Currency.ToUpperInvariant(),
             PaymentMethod = request.PaymentMethod,
@@ -68,11 +78,38 @@ public class PaymentsService : IPaymentService
 
         await _paymentRepository.UpdateAsync(payment, cancellationToken);
 
+        if (payment.Status == PaymentStatus.Succeeded)
+        {
+            var evt = new PaymentSucceededEvent(
+                EventId: Guid.NewGuid(),
+                PaymentId: payment.Id,
+                Type: ToContractPaymentType(payment.Type),
+                PayerId: payment.PayerId,
+                PayeeId: payment.PayeeId,
+                Amount: payment.Amount,
+                Currency: payment.Currency,
+                OccurredAt: DateTime.UtcNow
+            );
+
+            var outboxMessage = new OutboxMessage
+            {
+                Id = Guid.NewGuid(),
+                EventType = nameof(PaymentSucceededEvent),
+                Payload = JsonSerializer.Serialize(evt),
+                Published = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _outboxRepository.AddAsync(outboxMessage, cancellationToken);
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken); // ONE transaction: payment update and outbox insert commit together, or neither does
+
         _logger.LogInformation(
-            "Processed payment {PaymentId} with status {Status} for user {UserId}",
+            "Processed payment {PaymentId} with status {Status} for payee {PayeeId}",
             payment.Id,
             payment.Status,
-            payment.UserId);
+            payment.PayeeId);
 
         return new PaymentResult() { PaymentResponse = MapToResponse(payment), IsNew = true };
     }
@@ -86,10 +123,21 @@ public class PaymentsService : IPaymentService
     private static PaymentResponse MapToResponse(Payment payment) => new()
     {
         Id = payment.Id,
+        Type = payment.Type,
+        PayerId = payment.PayerId,
+        PayeeId = payment.PayeeId,
         Amount = payment.Amount,
         Currency = payment.Currency,
         Status = payment.Status,
         CreatedAt = payment.CreatedAt,
         UpdatedAt = payment.UpdatedAt
+    };
+
+    private static PaymentGateway.Contracts.PaymentType ToContractPaymentType(PaymentService.Domain.Enums.PaymentType type) => type switch
+    {
+        PaymentService.Domain.Enums.PaymentType.TopUp => PaymentGateway.Contracts.PaymentType.TopUp,
+        PaymentService.Domain.Enums.PaymentType.Transfer => PaymentGateway.Contracts.PaymentType.Transfer,
+        PaymentService.Domain.Enums.PaymentType.MerchantPayment => PaymentGateway.Contracts.PaymentType.MerchantPayment,
+        _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown payment type")
     };
 }

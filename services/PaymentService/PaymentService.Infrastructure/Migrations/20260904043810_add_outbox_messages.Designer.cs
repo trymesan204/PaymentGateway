@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PaymentService.Infrastructure.Context;
@@ -11,9 +12,11 @@ using PaymentService.Infrastructure.Context;
 namespace PaymentService.Infrastructure.Migrations
 {
     [DbContext(typeof(PaymentDbContext))]
-    partial class PaymentDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260904043810_add_outbox_messages")]
+    partial class add_outbox_messages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -79,7 +82,7 @@ namespace PaymentService.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2026, 9, 4, 5, 8, 3, 117, DateTimeKind.Utc).AddTicks(4330));
+                        .HasDefaultValue(new DateTime(2026, 9, 4, 4, 38, 9, 464, DateTimeKind.Utc).AddTicks(8263));
 
                     b.Property<string>("Currency")
                         .IsRequired()
@@ -92,12 +95,6 @@ namespace PaymentService.Infrastructure.Migrations
                     b.Property<Guid>("IdempotencyKey")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("PayeeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("PayerId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("PaymentMethod")
                         .HasColumnType("text");
 
@@ -105,14 +102,13 @@ namespace PaymentService.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2026, 9, 4, 5, 8, 3, 117, DateTimeKind.Utc).AddTicks(4779));
+                        .HasDefaultValue(new DateTime(2026, 9, 4, 4, 38, 9, 464, DateTimeKind.Utc).AddTicks(8714));
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 

@@ -1,5 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using PaymentService.Abstractions;
 using PaymentService.Infrastructure;
+using PaymentService.Infrastructure.Context;
 using PaymentService.Services;
 using Serilog;
 using System.Text.Json.Serialization;
@@ -41,6 +43,13 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     //}
+
+    // Program.cs, after building the app
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<PaymentDbContext>();
+        db.Database.Migrate();
+    }
 
     app.UseHttpsRedirection();
     app.UseAuthorization();

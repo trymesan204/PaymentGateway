@@ -26,6 +26,12 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(p => p.Status)
             .IsRequired();
 
+        builder.Property(p => p.Type)
+            .IsRequired();
+
+        builder.Property(p => p.PayeeId)
+            .IsRequired();
+
         builder.Property(p => p.CreatedAt)
             .HasDefaultValue(DateTime.UtcNow)
             .IsRequired();

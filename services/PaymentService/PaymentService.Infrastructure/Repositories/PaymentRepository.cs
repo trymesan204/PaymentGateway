@@ -35,9 +35,9 @@ public class PaymentRepository : IPaymentRepository
             .FirstOrDefaultAsync(p => p.IdempotencyKey == idempotencyKey, cancellationToken);
     }
 
-    public async Task UpdateAsync(Payment payment, CancellationToken cancellationToken = default)
+    public Task UpdateAsync(Payment payment, CancellationToken cancellationToken = default)
     {
         _context.Payments.Update(payment);
-        await _context.SaveChangesAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 }

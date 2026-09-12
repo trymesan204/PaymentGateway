@@ -10,20 +10,21 @@ WORKDIR /src
 # Copy ONLY the .csproj files first (not all your code yet).
 # Why? Docker is smart — if these files don't change, it reuses cached work
 # instead of re-downloading packages every single time you rebuild. Saves time.
-COPY ["PaymentService/PaymentService.csproj", "PaymentService/"]
-COPY ["PaymentService.Domain/PaymentService.Domain.csproj", "PaymentService.Domain/"]
-COPY ["PaymentService.Infrastructure/PaymentService.Infrastructure.csproj", "PaymentService.Infrastructure/"]
- 
+COPY ["services/PaymentService/PaymentService/PaymentService.csproj", "services/PaymentService/PaymentService/"]
+COPY ["services/PaymentService/PaymentService.Domain/PaymentService.Domain.csproj", "services/PaymentService/PaymentService.Domain/"]
+COPY ["services/PaymentService/PaymentService.Infrastructure/PaymentService.Infrastructure.csproj", "services/PaymentService/PaymentService.Infrastructure/"]
+COPY ["shared/PaymentGateway.Contracts/PaymentGateway.Contracts.csproj", "shared/PaymentGateway.Contracts/"]
+
 # Now download all the NuGet packages each project needs (EF Core, etc.)
-RUN dotnet restore "PaymentService/PaymentService.csproj"
- 
+RUN dotnet restore "services/PaymentService/PaymentService/PaymentService.csproj"
+
 # NOW copy the rest of your actual code (controllers, entities, everything else)
 COPY . .
- 
+
 # Move into the API project folder and compile it into a "Release" build
-WORKDIR /src
+WORKDIR /src/services/PaymentService
 RUN dotnet build "PaymentService/PaymentService.csproj" -c Release -o /app/build
- 
+
 # Package the compiled app into its final, ready-to-run form
 RUN dotnet publish "PaymentService/PaymentService.csproj" -c Release -o /app/publish
  

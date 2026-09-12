@@ -18,21 +18,37 @@ services:
       timeout: 5s
       retries: 5
  
+  #── The message broker box ───────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   # ── Your app box ──────────────────────────────────────────────
   payment-service:
     build:
-      context: .                                    # adjust if this file isn't next to the .sln
-      dockerfile: ./PaymentService/Dockerfile      # adjust path to match your actual Dockerfile location
+      context: ../..                                          # repo root, so shared/PaymentGateway.Contracts is in scope
+      dockerfile: services/PaymentService/PaymentService/Dockerfile
     container_name: payment-service
     ports:
       - "5000:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: "Host=host.docker.internal;Port=5432;Database=paymentservice;Username=postgres;Password=postgres"
+      ConnectionStrings__DefaultConnection: "Host=payment-db;Port=5432;Database=paymentservice;Username=postgres;Password=postgres"
+      RabbitMQ__Host: rabbitmq
     volumes:
       - ./logs:/app/logs
     depends_on:
       payment-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
 volumes:

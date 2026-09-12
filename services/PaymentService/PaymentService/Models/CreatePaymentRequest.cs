@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using PaymentService.Domain.Enums;
 
 namespace PaymentService.Models;
 
@@ -8,7 +9,12 @@ public class CreatePaymentRequest
     public Guid IdempotencyKey { get; set; }
 
     [Required]
-    public Guid UserId { get; set; }
+    public PaymentType Type { get; set; }
+
+    public Guid? PayerId { get; set; }             // not required for TopUp — funds originate outside the ledger
+
+    [Required]
+    public Guid PayeeId { get; set; }
 
     [Required]
     [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero.")]
