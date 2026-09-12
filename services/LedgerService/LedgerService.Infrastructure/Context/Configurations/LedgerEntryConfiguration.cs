@@ -14,7 +14,9 @@ public class LedgerEntryConfiguration : IEntityTypeConfiguration<LedgerEntry>
 
         builder.HasIndex(e => e.PaymentId);
 
-        builder.HasIndex(e => e.AccountId);
+        builder.HasIndex(e => new { e.AccountId, e.CreatedAt })
+            .HasDatabaseName("idx_ledger_entries_account_created")
+            .IsDescending(false, true);
 
         builder.Property(e => e.Type)
             .HasConversion<string>()
@@ -33,7 +35,7 @@ public class LedgerEntryConfiguration : IEntityTypeConfiguration<LedgerEntry>
             .IsRequired();
 
         builder.Property(e => e.CreatedAt)
-            .HasDefaultValue(DateTime.UtcNow)
+            .HasDefaultValueSql("now()")
             .IsRequired();
     }
 }

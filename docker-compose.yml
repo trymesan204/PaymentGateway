@@ -53,5 +53,45 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  ledger-db:
+    image: postgres:16
+    container_name: ledger-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ledgerservice
+    ports:
+      - "5434:5432"          # different host port — 5433 is already taken by payment-db
+    volumes:
+      - ledger-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ledger-service:
+    build:
+      context: .
+      dockerfile: services/LedgerService/LedgerService.Api/Dockerfile
+    container_name: ledger-service
+    ports:
+      - "5001:8080"          # different host port — 5000 is Payment Service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=ledger-db;Port=5432;Database=ledgerservice;Username=postgres;Password=postgres"
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      RabbitMQ__Username: guest
+      RabbitMQ__Password: guest
+    volumes:
+      - ./services/LedgerService/logs:/app/logs
+    depends_on:
+      ledger-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
 volumes:
   payment-db-data:
+  ledger-db-data:

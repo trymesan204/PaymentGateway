@@ -12,10 +12,12 @@ public class LedgerDbContext : DbContext
     }
 
     public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
+    public DbSet<ProcessedEvent> ProcessedEvents => Set<ProcessedEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new LedgerEntryConfiguration());
+        modelBuilder.ApplyConfiguration(new ProcessedEventConfiguration());
         base.OnModelCreating(modelBuilder);
     }
 }
