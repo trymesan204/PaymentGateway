@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NotificationService.Domain.Abstractions;
 using NotificationService.Infrastructure.Context;
+using NotificationService.Infrastructure.MailSender;
 using NotificationService.Infrastructure.Repositories;
 
 namespace NotificationService.Infrastructure;
@@ -18,6 +19,7 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IEmailSender, MailtrapEmailSender>();
 
         return services;
     }

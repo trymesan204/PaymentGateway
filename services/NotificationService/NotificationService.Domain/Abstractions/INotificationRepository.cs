@@ -10,8 +10,8 @@ public interface INotificationRepository
 
     Task<bool> HasProcessedAsync(Guid eventId, CancellationToken cancellationToken = default);
 
-    Task AddAndMarkProcessedAsync(
-        NotificationLog notificationLog,
+    Task AddLogsAndMarkProcessedAsync(
+        IReadOnlyList<NotificationLog> notificationLogs,
         Guid eventId,
         string eventType,
         CancellationToken cancellationToken = default);

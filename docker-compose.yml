@@ -92,6 +92,48 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  notification-db:
+    image: postgres:16
+    container_name: notification-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: notificationservice
+    ports:
+      - "5435:5432"
+    volumes:
+      - notification-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/NotificationService/NotificationService.Api/Dockerfile
+    container_name: notification-service
+    ports:
+      - "5002:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=notification-db;Port=5432;Database=notificationservice;Username=postgres;Password=postgres"
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      RabbitMQ__Username: guest
+      RabbitMQ__Password: guest
+      Mailtrap__Host: sandbox.smtp.mailtrap.io
+      Mailtrap__Port: 2525
+      Mailtrap__Username: a03ae5115f50ee
+      Mailtrap__Password: 6650928176f00f
+    depends_on:
+      notification-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
 volumes:
   payment-db-data:
   ledger-db-data:
+  notification-db-data:

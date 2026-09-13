@@ -37,13 +37,13 @@ public class NotificationRepository : INotificationRepository
             .AnyAsync(e => e.EventId == eventId, cancellationToken);
     }
 
-    public async Task AddAndMarkProcessedAsync(
-        NotificationLog notificationLog,
+    public async Task AddLogsAndMarkProcessedAsync(
+        IReadOnlyList<NotificationLog> notificationLogs,
         Guid eventId,
         string eventType,
         CancellationToken cancellationToken = default)
     {
-        await _context.NotificationLogs.AddAsync(notificationLog, cancellationToken);
+        await _context.NotificationLogs.AddRangeAsync(notificationLogs, cancellationToken);
         await _context.ProcessedEvents.AddAsync(new ProcessedEvent
         {
             EventId = eventId,

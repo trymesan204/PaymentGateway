@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using NotificationService.Infrastructure;
+using NotificationService.Infrastructure.Consumers;
 using NotificationService.Infrastructure.Context;
+using NotificationService.Infrastructure.EventHandler;
 
 namespace NotificationService.Api
 {
@@ -18,6 +20,8 @@ namespace NotificationService.Api
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddInfrastructure(builder.Configuration);
+            builder.Services.AddHostedService<PaymentSucceededConsumer>();
+            builder.Services.AddScoped<INotificationEventHandler, NotificationEventHandler>();
 
             var app = builder.Build();
 
