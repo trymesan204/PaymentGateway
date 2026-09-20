@@ -13,7 +13,9 @@ This is not a payment processor itself — it's the orchestration and ledger lay
 ```mermaid
 flowchart TB
     Client([Client])
-    Client --> Payment[Payment Service]
+    Client --> Gateway[API Gateway\nYARP reverse proxy]
+    Gateway --> Payment[Payment Service]
+    Gateway --> Ledger
 
     Payment -->|calls| Mock[Mock Payment Provider]
     Payment -->|writes payment + outbox row\n one transaction| PaymentDB[(Payment DB)]
@@ -40,7 +42,7 @@ Every payment produces **exactly one debit and one credit** ledger entry (double
 | **Payment Service** | Accepts payment requests, calls the (mocked) external provider, publishes outcomes | `payments`, `outbox_messages` |
 | **Ledger Service** | Consumes payment events, maintains double-entry balances and transaction history | `ledger_entries`, `processed_events` |
 | **Notification Service** | Consumes payment events, emails payer and payee via Mailtrap | `notification_logs`, `processed_events` |
-| **API Gateway** *(planned)* | Single entry point, JWT auth, rate limiting, routing | — |
+| **API Gateway** | Single entry point, routes requests to Payment/Ledger (YARP reverse proxy) | — |
 
 Each service has its own database, own solution (`.sln`), and is independently deployable. A root `PaymentGateway.sln` and root `docker-compose.yml` bring everything together for local development.
 
@@ -64,7 +66,8 @@ Each service has its own database, own solution (`.sln`), and is independently d
 
 ## Tech stack
 
-- **.NET 8** / ASP.NET Core Web API
+- **.NET 8** (services) / **.NET 9** (API Gateway) — ASP.NET Core Web API
+- **YARP** — reverse proxy powering the API Gateway
 - **PostgreSQL 16** — one database per service
 - **RabbitMQ 3** (management image) — fanout exchange, manual ack/nack
 - **Serilog** — structured logging, console + rolling file sinks
@@ -82,15 +85,18 @@ cd PaymentGateway
 docker compose up --build
 ```
 
-This starts all three services, their databases, and RabbitMQ, fully networked. Swagger is available per service:
+This starts all three services, the API Gateway, their databases, and RabbitMQ, fully networked. Swagger is available per service:
 
 | Service | Swagger | RabbitMQ Management |
 |---|---|---|
 | Payment | http://localhost:5000/swagger | http://localhost:15672 (guest/guest) |
 | Ledger | http://localhost:5001/swagger | |
 | Notification | http://localhost:5002/swagger | |
+| API Gateway | http://localhost:8000 *(no Swagger — plain YARP proxy)* | |
 
 Open `PaymentGateway.sln` at the repo root to see every project in one Visual Studio window.
+
+The gateway (`http://localhost:8000`) is the single entry point for Payment and Ledger — see [API Gateway](#api-gateway) below for exactly which paths it proxies where. Notification Service has no HTTP endpoints, so it isn't routed through the gateway; it's only reachable by consuming its emitted emails/logs.
 
 ### Demo flow
 
@@ -123,6 +129,17 @@ Open `PaymentGateway.sln` at the repo root to see every project in one Visual St
 
 ## API reference
 
+### API Gateway
+A [YARP](https://microsoft.github.io/reverse-proxy/) reverse proxy (`services/ApiGateway`) fronting Payment and Ledger on a single port. It does no auth, rate limiting, or path rewriting yet — routes are config-only (`appsettings.json`), and it forwards the incoming path as-is to whichever service matches:
+
+| Path | Proxies to |
+|---|---|
+| `POST /payments`, `GET /payments/{id}` | Payment Service |
+| `GET /payments/{paymentId}/entries` | Ledger Service |
+| `GET /accounts/{accountId}/balance`, `GET /accounts/{accountId}/entries` | Ledger Service |
+
+Ledger's dev-only `/dev/...` endpoint and Notification Service (no HTTP endpoints) are not routed through the gateway — hit them directly on their own ports.
+
 ### Payment Service
 - `POST /payments` — create a payment (`TopUp`, `Transfer`, or `MerchantPayment`)
 - `GET /payments/{id}` — check a payment's status
@@ -134,7 +151,7 @@ Open `PaymentGateway.sln` at the repo root to see every project in one Visual St
 - `POST /dev/seed-balance` — **development only**, credits an account directly for testing (returns 404 outside `Development`)
 
 ### Notification Service
-- `GET /payments/{paymentId}/notifications` — notification log for a payment
+No HTTP endpoints yet — it only consumes `PaymentSucceededEvent` off RabbitMQ and sends email via Mailtrap. A `GET /payments/{paymentId}/notifications` read endpoint was planned but never implemented.
 
 ---
 
@@ -144,7 +161,7 @@ These are intentional scoping decisions, not oversights — each has a real-worl
 
 | Limitation | Why it exists | What a production fix looks like |
 |---|---|---|
-| No authentication yet | API Gateway (Milestone 4) not yet built | JWT validation at the gateway; `PayerId` extracted from token claims, not client input |
+| No authentication yet | API Gateway only routes requests so far — no auth/rate limiting built into it yet | JWT validation at the gateway; `PayerId` extracted from token claims, not client input |
 | Balance check has a check-then-act race | Simple synchronous HTTP call, no reservation | A hold/reservation pattern — atomically reserve funds at check time, confirm or release later |
 | `Pending` payments (provider timeout) never resolve | No reconciliation job built | A scheduled job that re-queries the provider or expires stale `Pending` payments |
 | No dead-letter queue | Kept RabbitMQ config simple for this scope | `x-dead-letter-exchange` on queue declaration, routing repeatedly-failing messages to a DLQ for manual inspection |
@@ -156,7 +173,8 @@ These are intentional scoping decisions, not oversights — each has a real-worl
 
 ## Roadmap
 
-- [ ] API Gateway with JWT authentication and rate limiting (YARP)
+- [x] API Gateway routing requests to Payment/Ledger (YARP)
+- [ ] JWT authentication and rate limiting at the gateway
 - [ ] Reservation/hold pattern for balance checks
 - [ ] Dead-letter queue for poison messages
 - [ ] Reconciliation job for stuck `Pending` payments
@@ -173,7 +191,8 @@ PaymentGateway/
 ├── services/
 │   ├── PaymentService/     (Api, Domain, Infrastructure, Tests)
 │   ├── LedgerService/      (Api, Domain, Infrastructure, Tests)
-│   └── NotificationService/(Api, Domain, Infrastructure, Tests)
+│   ├── NotificationService/(Api, Domain, Infrastructure, Tests)
+│   └── ApiGateway/         (Api only — YARP reverse proxy, no Domain/Infrastructure)
 └── shared/
     └── PaymentGateway.Contracts/   (shared event contracts)
 ```

@@ -136,6 +136,17 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/ApiGateway/ApiGateway.Api/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8000:8080"
+    depends_on:
+      - payment-service
+      - ledger-service
+
 volumes:
   payment-db-data:
   ledger-db-data:

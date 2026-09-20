@@ -1,7 +1,7 @@
 @PaymentService_HostAddress = http://localhost:5150
 
 ### Process a payment
-POST {{PaymentService_HostAddress}}/api/payments
+POST {{PaymentService_HostAddress}}/payments
 Content-Type: application/json
 
 {
@@ -10,4 +10,4 @@ Content-Type: application/json
 }
 
 ### Get payment by id
-GET {{PaymentService_HostAddress}}/api/payments/{{paymentId}}
+GET {{PaymentService_HostAddress}}/payments/{{paymentId}}
