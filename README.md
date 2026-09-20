@@ -1,6 +1,8 @@
 # PaymentGateway
 
-A microservices-based payment platform built to demonstrate event-driven architecture, double-entry bookkeeping, and reliability patterns used in real payment systems — built with **.NET 10**, **PostgreSQL**, **RabbitMQ**, and **Docker**.
+[![Watch the demo](https://img.shields.io/badge/▶-Watch%20the%20Demo-red?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/gJ22UTq7DS8)
+
+A microservices-based payment platform built to demonstrate event-driven architecture, double-entry bookkeeping, and reliability patterns used in real payment systems — built with **.NET 8**, **PostgreSQL**, **RabbitMQ**, and **Docker**.
 
 This is not a payment processor itself — it's the orchestration and ledger layer a fintech app or wallet would build *around* a real payment processor (Stripe, Fonepay, ConnectIPS, etc.), which is mocked here to focus on the architecture.
 
@@ -62,7 +64,7 @@ Each service has its own database, own solution (`.sln`), and is independently d
 
 ## Tech stack
 
-- **.NET 10** / ASP.NET Core Web API
+- **.NET 8** / ASP.NET Core Web API
 - **PostgreSQL 16** — one database per service
 - **RabbitMQ 3** (management image) — fanout exchange, manual ack/nack
 - **Serilog** — structured logging, console + rolling file sinks
