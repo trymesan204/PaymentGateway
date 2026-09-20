@@ -75,7 +75,7 @@ Each service has its own database, own solution (`.sln`), and is independently d
 ## Running it locally
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/trymesan204/PaymentGateway.git
 cd PaymentGateway
 docker compose up --build
 ```
@@ -95,11 +95,27 @@ Open `PaymentGateway.sln` at the repo root to see every project in one Visual St
 1. `POST /payments` on Payment Service with `type: "TopUp"` — tops up an account from the system suspense account
 2. `GET /accounts/{accountId}/balance` on Ledger Service — confirm the balance increased
 3. `POST /payments` with `type: "Transfer"` from that account to another
+
+   <img src="docs/payment_service_request.png" width="700" alt="Swagger UI: POST /api/payments request body for a Transfer of 500 USD">
+
+   <img src="docs/payment_service_response.png" width="700" alt="Swagger UI: 201 response with status Succeeded">
+
 4. `GET /accounts/{accountId}/balance` on both accounts — confirm one decreased, one increased
+
+   <img src="docs/ledger_service_account_check_down_from_1100.png" width="700" alt="Swagger UI: GET /accounts/{accountId}/balance showing the payer's balance debited by the Transfer">
+
 5. Check Mailtrap's sandbox inbox — both payer and payee should have received an email
+
+   <img src="docs/mail_trap_payment_sent_email.png" width="500" alt="Mailtrap inbox: 'Payment sent' email delivered to the payer">
+   <img src="docs/mail_trap_payment_received_email.png" width="500" alt="Mailtrap inbox: 'Payment received' email delivered to the payee">
+
 6. Check RabbitMQ's management UI (`payment.events` exchange) to see message throughput
 
-*(See `/docs/demo.mp4` for a full recorded walkthrough.)*
+   <img src="docs/rabbitmq_payment_service_event_exchange.png" width="700" alt="RabbitMQ management UI: payment.events exchange publish-out rate">
+
+   <img src="docs/rabbitmq_ledger_service_event_queue.png" width="700" alt="RabbitMQ management UI: ledger.payment-events queue receiving and acking a delivery">
+
+   <img src="docs/rabbitmq_notification_service_event_queue.png" width="700" alt="RabbitMQ management UI: notification.payment-events queue, including a redelivery">
 
 ---
 
