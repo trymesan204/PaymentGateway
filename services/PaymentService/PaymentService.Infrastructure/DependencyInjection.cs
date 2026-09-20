@@ -27,6 +27,14 @@ public static class DependencyInjection
         services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
         services.AddHostedService<OutboxRelayService>();
 
+        var ledgerBaseUrl = configuration["Ledger:BaseUrl"]
+            ?? throw new InvalidOperationException("Configuration value 'Ledger:BaseUrl' not found.");
+
+        services.AddHttpClient<ILedgerClient, LedgerClient>(client =>
+        {
+            client.BaseAddress = new Uri(ledgerBaseUrl);
+        });
+
         return services;
     }
 }

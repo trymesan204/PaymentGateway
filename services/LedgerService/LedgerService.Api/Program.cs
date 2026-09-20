@@ -44,6 +44,7 @@ namespace LedgerService.Api
                 builder.Services.AddScoped<ILedgerQueryService, LedgerQueryService>();
                 builder.Services.AddHostedService<PaymentSucceededConsumer>();
                 builder.Services.AddScoped<ILedgerEventHandler, LedgerEventHandler>();
+                builder.Services.AddScoped<IDevSeedService, DevSeedService>();
 
                 var app = builder.Build();
 

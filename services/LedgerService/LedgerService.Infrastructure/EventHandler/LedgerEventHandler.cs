@@ -1,4 +1,5 @@
 ﻿using LedgerService.Domain.Abstractions;
+using LedgerService.Domain.Constants;
 using LedgerService.Domain.Entities;
 using LedgerService.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -8,8 +9,6 @@ namespace LedgerService.Infrastructure.EventHandler;
 
 public class LedgerEventHandler : ILedgerEventHandler
 {
-    private static readonly Guid SystemSuspenseAccountId = Guid.Parse("00000000-0000-0000-0000-000000000001");
-
     private readonly ILedgerRepository _ledgerRepository;
     private readonly ILogger<LedgerEventHandler> _logger;
 
@@ -27,7 +26,7 @@ public class LedgerEventHandler : ILedgerEventHandler
             return;
         }
 
-        var debitAccountId = evt.PayerId ?? SystemSuspenseAccountId;
+        var debitAccountId = evt.PayerId ?? LedgerAccounts.SystemSuspenseAccountId;
         var creditAccountId = evt.PayeeId;
 
         var debitBalance = await _ledgerRepository.GetLatestBalanceAsync(debitAccountId, cancellationToken);

@@ -14,6 +14,7 @@ public class PaymentsService : IPaymentService
     private readonly IOutboxRepository _outboxRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPaymentProcessor _paymentProcessor;
+    private readonly ILedgerClient _ledgerClient;
     private readonly ILogger<PaymentsService> _logger;
 
     public PaymentsService(
@@ -21,12 +22,14 @@ public class PaymentsService : IPaymentService
         IOutboxRepository outboxRepository,
         IUnitOfWork unitOfWork,
         IPaymentProcessor paymentProcessor,
+        ILedgerClient ledgerClient,
         ILogger<PaymentsService> logger)
     {
         _paymentRepository = paymentRepository;
         _outboxRepository = outboxRepository;
         _unitOfWork = unitOfWork;
         _paymentProcessor = paymentProcessor;
+        _ledgerClient = ledgerClient;
         _logger = logger;
     }
 
@@ -55,6 +58,18 @@ public class PaymentsService : IPaymentService
             PaymentMethod = request.PaymentMethod,
             CreatedAt = DateTime.UtcNow
         };
+
+        if (request.Type is Domain.Enums.PaymentType.Transfer or Domain.Enums.PaymentType.MerchantPayment)
+        {
+            var balance = await _ledgerClient.GetBalanceAsync(request.PayerId!.Value, cancellationToken);
+            if (balance < request.Amount)
+            {
+                payment.Status = PaymentStatus.Failed;
+                payment.FailureReason = "Insufficient funds";
+                await _paymentRepository.AddAsync(payment, cancellationToken);
+                return new PaymentResult { PaymentResponse = MapToResponse(payment), IsNew = true };
+            }
+        }
 
         await _paymentRepository.AddAsync(payment, cancellationToken);
 

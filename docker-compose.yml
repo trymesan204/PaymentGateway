@@ -45,6 +45,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Host=payment-db;Port=5432;Database=paymentservice;Username=postgres;Password=postgres"
       RabbitMQ__Host: rabbitmq
+      Ledger__BaseUrl: "http://ledger-service:8080"
     volumes:
       - ./services/PaymentService/logs:/app/logs
     depends_on:
@@ -52,6 +53,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      ledger-service:
+        condition: service_started
 
   ledger-db:
     image: postgres:16
